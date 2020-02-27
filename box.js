@@ -1,16 +1,20 @@
 //  also yoinked from the coding trains video
 
-class Particle {
-    constructor(x, y) {
+class Box {
+    constructor(x, y, w = 20, h = 20) {
         this.x = x;
         this.y = y;
-        this.r = 4;
+        this.w = w;
+        this.h = h;
         this.highlight = false;
     }
 
+    // yeet
     intersects(other) {
-        let d = dist(this.x, this.y, other.x, other.y);
-        return (d < this.r + other.r);
+        return !(other.x - other.w > this.x + this.w
+            || other.x + other.w < this.x - this.w
+            || other.y - other.h > this.y + this.h
+            || other.y + other.h < this.y - this.h);
     }
 
     setHighlight(value) {
@@ -29,6 +33,6 @@ class Particle {
         } else {
             fill(100);
         }
-        ellipse(this.x, this.y, this.r * 2);
+        rect(this.x, this.y, this.w, this.h);
     }
 }

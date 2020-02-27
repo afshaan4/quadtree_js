@@ -5,79 +5,30 @@
 // helper stuff
 ////////////////////////////////////////////////////////////////////////////////
 
-class Point {
-    constructor(x, y, userData) {
-        this.x = x;
-        this.y = y;
-        this.userData = userData; // so we can track it
-    }
-}
-
+// rectangles have their x, y in the center.
 class Rectangle {
-    constructor(x, y, w, h) {
+    constructor(x, y, w, h, userData) {
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
+        this.userData = userData;
     }
 
-    contains(point) {
-        return (point.x >= this.x - this.w
-            && point.x <= this.x + this.w
-            && point.y >= this.y - this.h
-            && point.y <= this.y + this.h);
+    // checks if there is a rectangle inside, kinda redundant but
+    containsB(box) {
+        return (box.x - box.w >= this.x - this.w
+            && box.x + box.w <= this.x + this.w
+            && box.y - box.h >= this.y - this.h
+            && box.y + box.h <= this.y + this.h);
     }
 
     // yeet
     intersects(range) {
-        return !(
-            range.x - range.w > this.x + this.w ||
-            range.x + range.w < this.x - this.w ||
-            range.y - range.h > this.y + this.h ||
-            range.y + range.h < this.y - this.h
-        );
-    }
-}
-
-class Circle {
-    constructor(x, y, r) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.rSquared = this.r * this.r;
-    }
-
-    contains(point) {
-        // check if the point is in the circle by checking if the euclidean distance of
-        // the point and the center of the circle if smaller or equal to the radius of
-        // the circle
-        let d = Math.pow((point.x - this.x), 2) + Math.pow((point.y - this.y), 2);
-        return d <= this.rSquared;
-    }
-
-    intersects(range) {
-
-        let xDist = Math.abs(range.x - this.x);
-        let yDist = Math.abs(range.y - this.y);
-
-        // radius of the circle
-        let r = this.r;
-
-        let w = range.w;
-        let h = range.h;
-
-        let edges = Math.pow((xDist - w), 2) + Math.pow((yDist - h), 2);
-
-        // no intersection
-        if (xDist > (r + w) || yDist > (r + h))
-            return false;
-
-        // intersection within the circle
-        if (xDist <= w || yDist <= h)
-            return true;
-
-        // intersection on the edge of the circle
-        return edges <= this.rSquared;
+        return !(range.x - range.w > this.x + this.w
+            || range.x + range.w < this.x - this.w
+            || range.y - range.h > this.y + this.h
+            || range.y + range.h < this.y - this.h);
     }
 }
 
@@ -91,6 +42,7 @@ class QuadTree {
         this.boundary = boundary;
         this.capacity = n;
         this.points = [];
+        this.boxes = [];
         this.divided = false;
     }
 
@@ -115,25 +67,21 @@ class QuadTree {
         this.divided = true;
     }
 
-    insert(point) {
-        // if the point isnt in this quadrant do nothing
-        if (!this.boundary.contains(point)) {
-            return false;
-        }
+    insert(box) {
+        // if the box isnt in this quadrant do nothing
+        if (!this.boundary.containsB(box)) return false;
 
-        if ((this.points.length < this.capacity) && this.northeast == null) {
-            this.points.push(point);
+        if ((this.boxes.length < this.capacity) && this.northeast == null) {
+            this.boxes.push(box);
             return true;
         } else {
             if (!this.divided) {
                 this.subDivide();
             }
-            // if point in edge only put it in one division
-            // this is preferential to northeast and southeast
-            if (this.northeast.insert(point)) return true;
-            else if (this.northwest.insert(point)) return true;
-            else if (this.southeast.insert(point)) return true
-            else if (this.southwest.insert(point)) return true
+            if (this.northeast.insert(box)) return true;
+            else if (this.northwest.insert(box)) return true;
+            else if (this.southeast.insert(box)) return true
+            else if (this.southwest.insert(box)) return true
         }
     }
 
@@ -144,9 +92,9 @@ class QuadTree {
         if (!this.boundary.intersects(range)) {
             return;
         } else {
-            for (let p of this.points) {
-                if (range.contains(p)) {
-                    found.push(p);
+            for (let b of this.boxes) {
+                if (range.containsB(b)) {
+                    found.push(b);
                 }
             }
             if (this.divided) {
@@ -156,21 +104,6 @@ class QuadTree {
                 this.southwest.query(range, found);
             }
             return found;
-        }
-    }
-
-    // TODO: remove
-    show() {
-        stroke(255);
-        strokeWeight(1);
-        noFill();
-        rectMode(CENTER);
-        rect(this.boundary.x, this.boundary.y, this.boundary.w * 2, this.boundary.h * 2);
-        if (this.divided) {
-            this.northeast.show();
-            this.northwest.show();
-            this.southeast.show();
-            this.southwest.show();
         }
     }
 }
