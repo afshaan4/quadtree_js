@@ -39,7 +39,7 @@ function draw() {
         b.move();
         b.render();
         b.setHighlight(false);
-        
+
         let range = new Rectangle(b.x, b.y, b.w * 2, b.h * 2);
         let rects = qTree.query(range);
         for (let r of rects) {

@@ -15,8 +15,8 @@ class Rectangle {
         this.userData = userData;
     }
 
-    // checks if there is a rectangle inside, kinda redundant but
-    containsB(box) {
+    // checks if there is a rectangle inside
+    contains(box) {
         return (box.x - box.w >= this.x - this.w
             && box.x + box.w <= this.x + this.w
             && box.y - box.h >= this.y - this.h
@@ -41,7 +41,6 @@ class QuadTree {
     constructor(boundary, n) {
         this.boundary = boundary;
         this.capacity = n;
-        this.points = [];
         this.boxes = [];
         this.divided = false;
     }
@@ -69,7 +68,7 @@ class QuadTree {
 
     insert(box) {
         // if the box isnt in this quadrant do nothing
-        if (!this.boundary.containsB(box)) return false;
+        if (!this.boundary.contains(box)) return false;
 
         if ((this.boxes.length < this.capacity) && this.northeast == null) {
             this.boxes.push(box);
@@ -85,7 +84,7 @@ class QuadTree {
         }
     }
 
-    // find all points in a rectangular area(range)
+    // find all boxes in a rectangular area(range)
     query(range, found) {
         if (!found) found = [];
 
@@ -93,7 +92,7 @@ class QuadTree {
             return;
         } else {
             for (let b of this.boxes) {
-                if (range.containsB(b)) {
+                if (range.contains(b)) {
                     found.push(b);
                 }
             }
